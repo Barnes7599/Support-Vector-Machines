@@ -38,3 +38,30 @@ ggplot(loans, aes(purpose)) +
     geom_bar(aes(fill = not.fully.paid), position = 'dodge') +
     labs(y = "", x = "", title = 'Number of Loans by Purpose') +
     theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(loans, aes(int.rate, fico)) + 
+    geom_point(aes(color = not.fully.paid), size = 1.5, alpha = .5)
+
+## TRAIN TEST SPLIT ##
+set.seed(101)
+sample <- sample.split(loans$not.fully.paid, SplitRatio = 0.7)
+train <- subset(loans, sample == TRUE)
+test <- subset(loans, sample == FALSE)
+library(e1071)
+
+model <- svm(loans$not.fully.paid ~ ., data = loans)
+summary(model)
+str(test)
+predicted.values <- predict(model, test[1:13])
+head(predicted.values)
+table(predicted.values, test$not.fully.paid)
+
+
+tune.results <- tune(svm, train.x = not.fully.paid ~ ., data = train, kernel = 'radial', ranges = list(cost = c(1,10), gamma = c(0.1,1)))
+
+summary(tune.results)
+
+model <- svm(not.fully.paid ~ ., data = train, cost = 10, gamma = 0.1)
+
+predicted.values <- predict(model, test[1:13])
+table(predicted.values, test$not.fully.paid)
